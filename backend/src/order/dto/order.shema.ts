@@ -14,10 +14,10 @@ export class Ticket {
   @Prop({ required: true })
   daytime: string;
 
-  @Prop({ required: true })
+  @Prop()
   day: string;
 
-  @Prop({ required: true })
+  @Prop()
   time: string;
 
   @Prop({ required: true })
