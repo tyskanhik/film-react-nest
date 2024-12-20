@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { FilmsService } from './films.service';
-import { Film } from './dto/film.schema';
+import { Film } from './entities/film.entity';
 import { FilmDTO } from './dto/films.dto';
 
 @Controller('films')

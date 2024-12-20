@@ -10,6 +10,7 @@ export class TicketDTO {
 }
 
 export class OrderDTO {
+  id?: string;
   tickets: TicketDTO[];
   email: string;
   phone: string;
