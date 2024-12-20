@@ -1,4 +1,9 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  InternalServerErrorException,
+  Post,
+} from '@nestjs/common';
 import { OrderService } from './order.service';
 import { OrderDTO } from './dto/order.dto';
 
@@ -8,6 +13,11 @@ export class OrderController {
 
   @Post()
   async createOrder(@Body() orderDto: OrderDTO) {
-    return this.orderService.createOrder(orderDto);
+    try {
+      const createdOrder = await this.orderService.createOrder(orderDto);
+      return createdOrder;
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to create order');
+    }
   }
 }

@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { FilmRepository } from '../repository/films.repository';
+import { OrderRepository } from '../repository/order.repository';
+import { Film } from '../films/entities/film.entity';
 import { OrderDTO, TicketDTO } from './dto/order.dto';
-import { FilmRepository } from 'src/repository/films.repository';
-import { OrderRepository } from 'src/repository/order.repository';
 
 @Injectable()
 export class OrderService {
@@ -12,16 +13,21 @@ export class OrderService {
 
   async createOrder(orderDto: OrderDTO) {
     const tickets = orderDto.tickets;
-    let number = 0;
+    let total: number;
     for (const ticket of tickets) {
-      number = await this.validateTickets(ticket);
+      total = await this.validateTickets(ticket);
     }
-    await this.orderRepository.createOrder(orderDto);
-    return { total: number, items: tickets };
+
+    const createdOrder = await this.orderRepository.createOrder(orderDto);
+
+    return {
+      total: total,
+      items: createdOrder.tickets,
+    };
   }
 
-  private async validateTickets(ticket: TicketDTO): Promise<number> {
-    const film = await this.filmRepository.findOne(ticket.film);
+  private async validateTickets(ticket: TicketDTO) {
+    const film: Film = await this.filmRepository.findOne(ticket.film);
     if (!film) {
       throw new NotFoundException(`Film not found for ID ${ticket.film}`);
     }
@@ -34,15 +40,30 @@ export class OrderService {
     }
 
     const seatKey = `${ticket.row}:${ticket.seat}`;
-    if (schedule.taken.includes(seatKey)) {
+    if (schedule.taken.split(',').includes(seatKey)) {
       throw new NotFoundException(
         `Seat ${seatKey} is already taken for session ${ticket.session}`,
       );
     }
 
-    schedule.taken.push(seatKey);
-    await this.filmRepository.updateFilmSchedule(film.id, film.schedule);
+    if (!schedule.taken) {
+      schedule.taken = seatKey;
+    } else {
+      schedule.taken = `${schedule.taken},${seatKey}`;
+    }
 
-    return schedule.taken.length;
+    const countTakenSeats = (taken: string): number => {
+      if (!taken) {
+        return 0;
+      }
+      const seatsArray = taken.split(',');
+
+      return seatsArray.length;
+    };
+
+    const numberOfTakenSeats = countTakenSeats(schedule.taken);
+
+    await this.filmRepository.updateFilmSchedule(film.schedule);
+    return numberOfTakenSeats;
   }
 }
