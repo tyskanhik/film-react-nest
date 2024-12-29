@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OrderEntity } from '../order/entities/order.entity';
-import { OrderDTO, TicketDTO } from 'src/order/dto/order.dto';
+import { OrderDTO, TicketDTO } from '../order/dto/order.dto';
 import * as crypto from 'crypto';
 
 @Injectable()
