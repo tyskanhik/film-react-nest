@@ -3,10 +3,10 @@ name: Build and Publish Docker Images
 on:
   push:
     branches:
-      - review-2
+      - review-3
   pull_request:
     branches:
-      - review-2
+      - review-3
       - main
 
 jobs:
