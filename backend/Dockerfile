@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm сi
+RUN npm ci
 
 COPY . .
 
