@@ -1,16 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Order, OrderDocument } from '../order/dto/order.shema';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { OrderEntity } from '../order/entities/order.entity';
+import { OrderDTO, TicketDTO } from '../order/dto/order.dto';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class OrderRepository {
   constructor(
-    @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
+    @InjectRepository(OrderEntity)
+    private orderRepository: Repository<OrderEntity>,
   ) {}
 
-  async createOrder(orderData: any): Promise<OrderDocument> {
-    const newOrder = new this.orderModel(orderData);
-    return await newOrder.save();
+  private generateTicketsWithId(tickets: TicketDTO[]) {
+    return tickets.map((ticket) => ({
+      ...ticket,
+      id: crypto.randomUUID(),
+    }));
+  }
+
+  async createOrder(orderData: Partial<OrderDTO>) {
+    const newTickets = this.generateTicketsWithId(orderData.tickets);
+
+    const newOrder = new OrderDTO();
+    newOrder.email = orderData.email;
+    newOrder.phone = orderData.phone;
+    newOrder.id = crypto.randomUUID();
+    newOrder.tickets = newTickets;
+
+    return newOrder;
   }
 }

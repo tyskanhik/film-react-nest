@@ -1,33 +1,42 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Film, FilmDocument } from '../films/dto/film.schema';
-import { FilmDTO, GetScheduleDTO } from '../films/dto/films.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Film } from '../films/entities/film.entity';
+import { FilmDTO } from '../films/dto/films.dto';
+import { Schedule } from '../films/entities/schedule.entity';
 
 @Injectable()
 export class FilmRepository {
-  constructor(@InjectModel(Film.name) private filmModel: Model<FilmDocument>) {}
+  constructor(
+    @InjectRepository(Film)
+    private filmRepository: Repository<Film>,
+    @InjectRepository(Schedule)
+    private scheduleRepository: Repository<Schedule>,
+  ) {}
 
   async create(createFilmDto: FilmDTO): Promise<Film> {
-    const createdFilm = new this.filmModel(createFilmDto);
-    return createdFilm.save();
+    const createdFilm = this.filmRepository.create(createFilmDto);
+    return this.filmRepository.save(createdFilm);
   }
 
   async findAll(): Promise<Film[]> {
-    return this.filmModel.find();
+    return this.filmRepository.find();
   }
 
   async findOne(id: string): Promise<Film> {
-    return this.filmModel.findOne({ id: id });
+    const result = await this.filmRepository.findOne({
+      where: { id },
+      relations: ['schedule'],
+    });
+
+    if (!result) {
+      throw new Error('Film not found');
+    }
+
+    return result;
   }
 
-  async updateFilmSchedule(id: string, schedule: GetScheduleDTO[]) {
-    const result = await this.filmModel.updateOne(
-      { id: id },
-      {
-        $set: { schedule },
-      },
-    );
-    return result;
+  async updateFilmSchedule(schedule: Schedule[]) {
+    return await this.scheduleRepository.save(schedule);
   }
 }
